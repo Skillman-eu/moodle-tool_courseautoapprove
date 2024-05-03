@@ -96,7 +96,17 @@ class approve_course_requests_task extends \core\task\scheduled_task {
             }
 
             mtrace("... - Approving course request from userid {$request->requester} for the course {$request->shortname}.");
-            $courserequest->approve();
+            if (!empty($config->usetemplate) && !empty($config->coursetemplate)) {
+                if ($DB->record_exists('course', ['id' => $config->coursetemplate])) {
+                    $res = $this->create_course_from_template($courserequest, $config);
+                } else {
+                    // Course template not available - general approval.
+                    $courserequest->approve();
+                }
+            } else {
+                // General approval.
+                $courserequest->approve();
+            }
         }
         $rs->close();
 
@@ -123,5 +133,100 @@ class approve_course_requests_task extends \core\task\scheduled_task {
         }
 
         return $result;
+    }
+
+    private function create_course_from_template(\course_request &$courserequest, object $config): int {
+        global $CFG, $DB, $USER;
+
+        //$CFG->debugdisplay = 0;
+        require_once($CFG->dirroot . '/course/externallib.php');
+        require_once($CFG->dirroot . '/course/format/lib.php');
+
+        // TODO: check option users further.
+        $fullname = $courserequest->fullname;
+        $shortname = $courserequest->shortname;
+        $categoryid = $courserequest->get_category()->id;
+        $courseid = $config->coursetemplate;
+
+        $context = \context_coursecat::instance($categoryid);
+
+        $options = [
+            array('name' => 'blocks', 'value' => 1),
+            array('name' => 'activities', 'value' => 1),
+            array('name' => 'filters', 'value' => 1),
+            array('name' => 'users', 'value' => 0),
+        ];
+        $visible = 1;
+
+        $startdatetime = usergetmidnight(time());
+
+        if (!$fullname || !$shortname || !$categoryid || !$courseid) {
+            $data = json_encode(['status' => 2, 'id' => $courseid, 'cateid' => $categoryid]);
+            mtrace('Course duplication error. Data:' . $data);
+            return 0;
+        }
+
+        $externalobj = new \core_course_external();
+
+        try {
+            // Make sure the course's sections have proper labels.
+            // See the set_label() method in /backup/util/ui/backup_ui_setting.class.php.
+            // The set_label() method sanitizes the section name using PARAM_CLEANHTML (as of Moodle 3.11).
+            $sections = $DB->get_records('course_sections', array('course' => $courseid), 'section');
+
+            foreach ($sections as $section) {
+                if (isset($section->name) && clean_param($section->name, PARAM_CLEANHTML) === '') {
+                    course_get_format($section->course)->inplace_editable_update_section_name($section, 'sectionname', null);
+
+                    $section->name = null;
+                    $DB->update_record('course_sections', $section);
+                }
+            }
+
+            $res = $externalobj->duplicate_course($courseid, $fullname, $shortname, $categoryid, $visible, $options);
+        } catch (\moodle_exception $e) {
+            $data = json_encode(['status' => 0, 'msg' => $e->getMessage()]);
+            mtrace('Course duplication error. Data:' . $data);
+            return 0;
+        }
+
+        sleep(3);
+
+        if (@isset($res['id'])) {
+            try {
+                $course = $DB->get_record('course', array('id' => $res['id']));
+
+                if (!empty($startdatetime)) {
+                    $course->startdate = $startdatetime;
+                    //$course->enddate = $enddatetime;
+                    $DB->update_record('course', $course);
+                }
+
+                if (!empty($location)) {
+                    $eventoption = $DB->get_record(
+                        'course_format_options',
+                        array(
+                            'courseid' => $course->id,
+                            'format' => 'event',
+                            'name' => 'location'
+                        )
+                    );
+                    $eventoption->value = $location;
+                    $DB->update_record('course_format_options', $eventoption);
+                }
+            } catch (\Exception $e) {
+                $data = json_encode(['status' => 0, 'msg' => $e->getMessage()]);
+                mtrace('Course duplication error. Data:' . $data);
+                return 0;
+            }
+
+            $data = json_encode(['status' => 1, 'ID' => $res['id']]);
+            mtrace('Course duplication success! Data:' . $data);
+            return $res['id'];
+        } else {
+            $data = json_encode(['status' => 0, 'msg' => get_string('unknownerror', 'core')]);
+            mtrace('Course duplication error. Data:' . $data);
+            return 0;
+        }
     }
 }
