@@ -49,10 +49,28 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default);
     $settings->add($setting);
 
+    // Skillman: use course template
     $name = 'tool_courseautoapprove/usetemplate';
     $title = new lang_string('usetemplate', 'tool_courseautoapprove');
     $description = new lang_string('usetemplate_desc', 'tool_courseautoapprove');
     $default = 0;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default);
+    $settings->add($setting);
+
+    // Skillman: select course as template.
+    // Get all courses
+    $allcourses = get_courses(null, null, 'c.shortname,c.fullname');
+    // Extract course names.
+    $courses = array();
+    foreach ($allcourses as $course) {
+        $courses[$course->id] = $course->fullname;
+    }
+    // Add course selector (there are admin_setting_configtext_autocomplete since Moodle 4.0).
+    $name = 'tool_courseautoapprove/coursetemplate';
+    $title = new lang_string('coursetemplate', 'tool_courseautoapprove');
+    $description = new lang_string('coursetemplate_desc', 'tool_courseautoapprove');
+    $default = '';
+    $setting = new admin_setting_configselect($name, $title, $description, $default, $courses);
+    //$setting->add_dependent_on('tool_courseautoapprove/usetemplate'); // Not working properly.
     $settings->add($setting);
 }

@@ -36,3 +36,5 @@ $string['rejectmsgcount'] = 'You are already a teacher in {$a->currentcourses} c
 $string['rejectmshshortname'] = 'There is another course with that short name';
 $string['usetemplate'] = 'Use course template';
 $string['usetemplate_desc'] = 'Set this to \'Yes\' to automatically create course from specified template.';
+$string['coursetemplate'] = 'Select a course template';
+$string['coursetemplate_desc'] = 'Select a course to be used as template when request has been approved.';
