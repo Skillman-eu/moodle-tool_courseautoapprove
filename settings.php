@@ -48,4 +48,11 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $default = 1;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default);
     $settings->add($setting);
+
+    $name = 'tool_courseautoapprove/usetemplate';
+    $title = new lang_string('usetemplate', 'tool_courseautoapprove');
+    $description = new lang_string('usetemplate_desc', 'tool_courseautoapprove');
+    $default = 0;
+    $setting = new admin_setting_configcheckbox($name, $title, $description, $default);
+    $settings->add($setting);
 }
