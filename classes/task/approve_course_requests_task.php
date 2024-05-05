@@ -138,17 +138,15 @@ class approve_course_requests_task extends \core\task\scheduled_task {
     private function create_course_from_template(\course_request &$courserequest, object $config): int {
         global $CFG, $DB, $USER;
 
-        //$CFG->debugdisplay = 0;
         require_once($CFG->dirroot . '/course/externallib.php');
         require_once($CFG->dirroot . '/course/format/lib.php');
+        require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
+        require_once($CFG->dirroot . '/backup/util/dbops/restore_dbops.class.php');
 
         // TODO: check option users further.
-        $fullname = $courserequest->fullname;
-        $shortname = $courserequest->shortname;
+        list($fullname, $shortname) = \restore_dbops::calculate_course_names(0, $courserequest->fullname, $courserequest->shortname);
         $categoryid = $courserequest->get_category()->id;
         $courseid = $config->coursetemplate;
-
-        $context = \context_coursecat::instance($categoryid);
 
         $options = [
             array('name' => 'blocks', 'value' => 1),
@@ -157,7 +155,6 @@ class approve_course_requests_task extends \core\task\scheduled_task {
             array('name' => 'users', 'value' => 0),
         ];
         $visible = 1;
-
         $startdatetime = usergetmidnight(time());
 
         if (!$fullname || !$shortname || !$categoryid || !$courseid) {
@@ -214,6 +211,30 @@ class approve_course_requests_task extends \core\task\scheduled_task {
                     $eventoption->value = $location;
                     $DB->update_record('course_format_options', $eventoption);
                 }
+
+                $user = $DB->get_record('user', ['id' => $courserequest->get_requester()->id, 'deleted'=>0], '*', MUST_EXIST);
+
+                // Enroll requester user as teacher.
+                $context = \context_course::instance($course->id);
+                // Add enrol instances.
+                if (!$DB->record_exists('enrol', ['courseid' => $course->id, 'enrol' => 'manual'])) {
+                    if ($manual = enrol_get_plugin('manual')) {
+                        $manual->add_default_instance($course);
+                    }
+                }
+                // Enrol the requester as teacher if necessary.
+                if (!empty($CFG->creatornewroleid) and !is_viewing($context, $user, 'moodle/role:assign') and !is_enrolled($context, $user, 'moodle/role:assign')) {
+                    enrol_try_internal_enrol($course->id, $user->id, $CFG->creatornewroleid);
+                }
+
+                // Delete request.
+                $courserequest->delete();
+
+                // Notify user on success.
+                $a = new \stdClass();
+                $a->name = format_string($course->fullname, true, ['context' => \context_course::instance($course->id, MUST_EXIST)]);
+                $a->url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
+                $this->notify($user, $USER, 'courserequestapproved', get_string('courseapprovedsubject'), get_string('courseapprovedemail2', 'moodle', $a), $course->id);
             } catch (\Exception $e) {
                 $data = json_encode(['status' => 0, 'msg' => $e->getMessage()]);
                 mtrace('Course duplication error. Data:' . $data);
@@ -228,5 +249,32 @@ class approve_course_requests_task extends \core\task\scheduled_task {
             mtrace('Course duplication error. Data:' . $data);
             return 0;
         }
+    }
+
+    /**
+     * Send a message from one user to another using events_trigger
+     *
+     * @param object $touser
+     * @param object $fromuser
+     * @param string $name
+     * @param string $subject
+     * @param string $message
+     * @param int|null $courseid
+     * @throws \coding_exception
+     */
+    protected function notify($touser, $fromuser, $name='courserequested', $subject, $message, $courseid = null) {
+        $eventdata = new \core\message\message();
+        $eventdata->courseid          = empty($courseid) ? SITEID : $courseid;
+        $eventdata->component         = 'moodle';
+        $eventdata->name              = $name;
+        $eventdata->userfrom          = $fromuser;
+        $eventdata->userto            = $touser;
+        $eventdata->subject           = $subject;
+        $eventdata->fullmessage       = $message;
+        $eventdata->fullmessageformat = FORMAT_PLAIN;
+        $eventdata->fullmessagehtml   = '';
+        $eventdata->smallmessage      = '';
+        $eventdata->notification      = 1;
+        message_send($eventdata);
     }
 }
