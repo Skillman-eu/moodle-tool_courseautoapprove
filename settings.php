@@ -49,6 +49,14 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default);
     $settings->add($setting);
 
+    // Skillman: max number of requests to auto-reject.
+    $name = 'tool_courseautoapprove/maxtoreject';
+    $title = new lang_string('maxreqtoreject', 'tool_courseautoapprove');
+    $description = new lang_string('maxreqtoreject_desc', 'tool_courseautoapprove');
+    $default = 5;
+    $setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_INT);
+    $settings->add($setting);
+
     // Skillman: use course template
     $name = 'tool_courseautoapprove/usetemplate';
     $title = new lang_string('usetemplate', 'tool_courseautoapprove');
@@ -72,5 +80,12 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $default = '';
     $setting = new admin_setting_configselect($name, $title, $description, $default, $courses);
     //$setting->add_dependent_on('tool_courseautoapprove/usetemplate'); // Not working properly.
+    $settings->add($setting);
+
+    $name = 'tool_courseautoapprove/approvemessage';
+    $title = new lang_string('approvemessage', 'tool_courseautoapprove');
+    $description = new lang_string('approvemessage_desc', 'tool_courseautoapprove');
+    $defaultsetting = '';
+    $setting = new admin_setting_confightmleditor($name, $title, $description, $defaultsetting);
     $settings->add($setting);
 }

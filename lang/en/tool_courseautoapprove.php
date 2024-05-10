@@ -38,3 +38,9 @@ $string['usetemplate'] = 'Use course template';
 $string['usetemplate_desc'] = 'Set this to \'Yes\' to automatically create course from specified template.';
 $string['coursetemplate'] = 'Select a course template';
 $string['coursetemplate_desc'] = 'Select a course to be used as template when request has been approved.';
+$string['maxreqtoreject'] = 'Auto-reject if number of requests exceeded';
+$string['maxreqtoreject_desc'] = 'Set maximal number of requests that auto-rejection will start automatically once it will be reached.';
+$string['rejectmsgmaxreqcount'] = 'You are already a teacher in {$a->currentcourses} course(s) and the limit of requests has been set to {$a->maxreqtoreject} course(s).';
+$string['approvemessage'] = 'Custom approve message';
+$string['approvemessage_desc'] = 'Text of custom message being sent on request approval.';
+
