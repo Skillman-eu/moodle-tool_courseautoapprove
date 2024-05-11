@@ -42,5 +42,6 @@ $string['maxreqtoreject'] = 'Auto-reject if number of requests exceeded';
 $string['maxreqtoreject_desc'] = 'Set maximal number of requests that auto-rejection will start automatically once it will be reached.';
 $string['rejectmsgmaxreqcount'] = 'You are already a teacher in {$a->currentcourses} course(s) and the limit of requests has been set to {$a->maxreqtoreject} course(s).';
 $string['approvemessage'] = 'Custom approve message';
-$string['approvemessage_desc'] = 'Text of custom message being sent on request approval.';
+$string['approvemessage_desc'] = 'Text of custom message being sent on request approval. Supported placeholders {COURSENAME}, {COURSEURL}, {USERNAME}, {FIRSTNAMME}, {LASTNAME}';
+$string['courseapprovemessage'] = 'Your requested course, {COURSENAME}, has been approved. To access your new course, go to {COURSEURL}';
 

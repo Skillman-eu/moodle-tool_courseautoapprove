@@ -85,7 +85,7 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $name = 'tool_courseautoapprove/approvemessage';
     $title = new lang_string('approvemessage', 'tool_courseautoapprove');
     $description = new lang_string('approvemessage_desc', 'tool_courseautoapprove');
-    $defaultsetting = '';
+    $defaultsetting = new lang_string('courseapprovemessage', 'tool_courseautoapprove');
     $setting = new admin_setting_confightmleditor($name, $title, $description, $defaultsetting);
     $settings->add($setting);
 }

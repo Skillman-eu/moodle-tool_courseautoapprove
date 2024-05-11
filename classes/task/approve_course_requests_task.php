@@ -70,7 +70,7 @@ class approve_course_requests_task extends \core\task\scheduled_task {
         $rs = $DB->get_recordset('course_request', [], 'requester, id');
         $curruser = 0;
         $userreqcount = 0;
-        
+
         // Process each request.
         foreach ($rs as $request) {
             $courserequest = new \course_request($request);
@@ -250,10 +250,15 @@ class approve_course_requests_task extends \core\task\scheduled_task {
                 $courserequest->delete();
 
                 // Notify user on success.
-                $a = new \stdClass();
-                $a->name = format_string($course->fullname, true, ['context' => \context_course::instance($course->id, MUST_EXIST)]);
-                $a->url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
-                $this->notify($user, $USER, 'courserequestapproved', get_string('courseapprovedsubject'), get_string('courseapprovedemail2', 'moodle', $a), $course->id);
+                if (!empty($config->approvemessage)) {
+                    $mststring = $this->process_message($config->approvemessage, $user, $course);
+                } else {
+                    $a = new \stdClass();
+                    $a->name = format_string($course->fullname, true, ['context' => \context_course::instance($course->id, MUST_EXIST)]);
+                    $a->url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
+                    $mststring = get_string('courseapprovedemail2', 'moodle', $a);
+                }
+                $this->notify($user, $USER, 'courserequestapproved', get_string('courseapprovedsubject'), $mststring, $course->id);
             } catch (\Exception $e) {
                 $data = json_encode(['status' => 0, 'msg' => $e->getMessage()]);
                 mtrace('Course duplication error. Data:' . $data);
@@ -295,5 +300,25 @@ class approve_course_requests_task extends \core\task\scheduled_task {
         $eventdata->smallmessage      = '';
         $eventdata->notification      = 1;
         message_send($eventdata);
+    }
+
+    // Procesa el mensaje para aceptar marcadores.
+    /**
+     * Proccess message method
+     * @param String $mensaje el mensaje en bruto
+     * @param stdClass $user instancia usuario
+     * @param stdClass $course instancia curso
+     * @return String el mensaje procesado
+     */
+    protected function process_message($message, \stdClass $user, \stdClass $course):string {
+        global $CFG;
+        $m = $message;
+        $url = new \moodle_url($CFG->wwwroot . '/course/view.php', ['id' => $course->id]);
+        $m = str_replace('{COURSENAME}', format_string($course->fullname, true, ['context' => \context_course::instance($course->id, MUST_EXIST)]), $m);
+        $m = str_replace('{USERNAME}', $user->username, $m);
+        $m = str_replace('{FIRSTNAMME}', $user->firstname, $m);
+        $m = str_replace('{LASTNAME}', $user->lastname, $m);
+        $m = str_replace('{COURSEURL}', $url, $m);
+        return $m;
     }
 }
