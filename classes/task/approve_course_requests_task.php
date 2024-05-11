@@ -66,7 +66,12 @@ class approve_course_requests_task extends \core\task\scheduled_task {
 
         mtrace('... Starting to auto-approve course requests.');
 
-        $rs = $DB->get_recordset('course_request');
+        // Skillman: add sorting to process requests per user.
+        $rs = $DB->get_recordset('course_request', [], 'requester, id');
+        $curruser = 0;
+        $userreqcount = 0;
+        
+        // Process each request.
         foreach ($rs as $request) {
             $courserequest = new \course_request($request);
             $currentcourses = self::count_courses_user_is_teacher($request->requester);
@@ -75,10 +80,24 @@ class approve_course_requests_task extends \core\task\scheduled_task {
                 mtrace("... - Denying course request from userid {$request->requester} as they are already a teacher ".
                     "in {$currentcourses} existing course(s) and the limit is {$config->maxcourses}.");
 
-                if ($config->reject) {
+                if ($config->reject && (empty($config->maxreqtoreject) || (int)$config->maxreqtoreject == 1)) {
                     mtrace("...   Marking the course request as rejected and notifying the user.");
                     $courserequest->reject(get_string('rejectmsgcount', 'tool_courseautoapprove',
                         ['currentcourses' => $currentcourses, 'maxcourses' => $config->maxcourses]));
+                } elseif ($config->reject && !empty($config->maxreqtoreject) && (int)$config->maxreqtoreject > 1) {
+                    // Skillman: count requests of each user.
+                    if ($curruser != $request->requester) {
+                        $curruser = $request->requester;
+                        $userreqcount = 1;
+                    } else {
+                        $userreqcount++;
+                    }
+                    // Skillman: reject requests over maxreqtoreject.
+                    if ($userreqcount > (int)$config->maxreqtoreject) {
+                    mtrace("...   Override maxreqtoreject - marking the course request as rejected and notifying the user.");
+                    $courserequest->reject(get_string('rejectmsgmaxreqcount', 'tool_courseautoapprove',
+                        ['currentcourses' => $currentcourses, 'maxreqtoreject' => $config->maxcourses]));
+                    }
                 }
 
                 continue;
