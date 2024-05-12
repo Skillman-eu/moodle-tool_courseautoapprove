@@ -96,7 +96,7 @@ class approve_course_requests_task extends \core\task\scheduled_task {
                     if ($userreqcount > (int)$config->maxreqtoreject) {
                     mtrace("...   Override maxreqtoreject - marking the course request as rejected and notifying the user.");
                     $courserequest->reject(get_string('rejectmsgmaxreqcount', 'tool_courseautoapprove',
-                        ['currentcourses' => $currentcourses, 'maxreqtoreject' => $config->maxcourses]));
+                        ['currentcourses' => $currentcourses, 'userreqcount' => $userreqcount, 'maxreqtoreject' => $config->maxreqtoreject]));
                     }
                 }
 
@@ -258,7 +258,7 @@ class approve_course_requests_task extends \core\task\scheduled_task {
                     $a->url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
                     $mststring = get_string('courseapprovedemail2', 'moodle', $a);
                 }
-                $this->notify($user, $USER, 'courserequestapproved', get_string('courseapprovedsubject'), $mststring, $course->id);
+                $this->notify($user, $USER, 'courserequestapproved', $mststring, $mststring, $course->id);
             } catch (\Exception $e) {
                 $data = json_encode(['status' => 0, 'msg' => $e->getMessage()]);
                 mtrace('Course duplication error. Data:' . $data);
@@ -299,6 +299,7 @@ class approve_course_requests_task extends \core\task\scheduled_task {
         $eventdata->fullmessagehtml   = '';
         $eventdata->smallmessage      = '';
         $eventdata->notification      = 1;
+        ob_start(); var_dump($message); $out = ob_get_clean(); file_put_contents('D:\msg_log.txt', $out);
         message_send($eventdata);
     }
 

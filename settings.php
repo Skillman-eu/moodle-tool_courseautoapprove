@@ -50,7 +50,7 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $settings->add($setting);
 
     // Skillman: max number of requests to auto-reject.
-    $name = 'tool_courseautoapprove/maxtoreject';
+    $name = 'tool_courseautoapprove/maxreqtoreject';
     $title = new lang_string('maxreqtoreject', 'tool_courseautoapprove');
     $description = new lang_string('maxreqtoreject_desc', 'tool_courseautoapprove');
     $default = 5;
@@ -88,4 +88,10 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $defaultsetting = new lang_string('courseapprovemessage', 'tool_courseautoapprove');
     $setting = new admin_setting_confightmleditor($name, $title, $description, $defaultsetting);
     $settings->add($setting);
+    //var_dump(get_roles_for_contextlevels(CONTEXT_COURSE));
+    //array_values();
+    $systemcontext = context_system::instance();
+    $roles = role_fix_names(get_all_roles($systemcontext), $systemcontext, ROLENAME_ORIGINAL);
+
+    //var_dump($roles);
 }

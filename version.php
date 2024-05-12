@@ -26,6 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_courseautoapprove';
 $plugin->release = '0.1.0';
-$plugin->version = 2019030700;
+$plugin->version = 2019030702;
 $plugin->requires = 2018120300;
 $plugin->maturity = MATURITY_BETA;
