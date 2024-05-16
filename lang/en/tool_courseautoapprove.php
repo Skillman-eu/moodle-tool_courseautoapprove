@@ -34,6 +34,7 @@ $string['reject'] = 'Auto-reject extra courses';
 $string['reject_desc'] = 'Set this to \'Yes\' to automatically reject course requests once the limit is reached. If not set, requests that were not approved automatically, will have to be processed manually.';
 $string['rejectmsgcount'] = 'You are already a teacher in {$a->currentcourses} course(s) and the limit has been set to {$a->maxcourses} course(s).';
 $string['rejectmshshortname'] = 'There is another course with that short name';
+// Skillman.
 $string['usetemplate'] = 'Use course template';
 $string['usetemplate_desc'] = 'Set this to \'Yes\' to automatically create course from specified template.';
 $string['coursetemplate'] = 'Select a course template';
@@ -44,4 +45,7 @@ $string['rejectmsgmaxreqcount'] = 'You are already a teacher in {$a->currentcour
 $string['approvemessage'] = 'Custom approve message';
 $string['approvemessage_desc'] = 'Text of custom message being sent on request approval. Supported placeholders {COURSENAME}, {COURSEURL}, {USERNAME}, {FIRSTNAMME}, {LASTNAME}';
 $string['courseapprovemessage'] = 'Your requested DQF ambient in form of Moodle course, {COURSENAME}, has been approved. To access it, go to {COURSEURL}';
-
+$string['courserole'] = 'Select course-level role:';
+$string['courserole_desc'] = 'Select a role to be assigned to requester in the new course. Important: this feature working only if "Use course template" is active!';
+$string['systemrole'] = 'Select system-level role (if necessary):';
+$string['systemrole_desc'] = 'Select an additional role to be assigned to requester on system level. Important: this feature working only if "Use course template" is active!';
