@@ -241,9 +241,14 @@ class approve_course_requests_task extends \core\task\scheduled_task {
                         $manual->add_default_instance($course);
                     }
                 }
-                // Enrol the requester as teacher if necessary.
-                if (!empty($CFG->creatornewroleid) and !is_viewing($context, $user, 'moodle/role:assign') and !is_enrolled($context, $user, 'moodle/role:assign')) {
-                    enrol_try_internal_enrol($course->id, $user->id, $CFG->creatornewroleid);
+                // Enrol the requester with Skillman's custom role if necessary.
+                if (!empty($config->courserole) and !is_viewing($context, $user, 'moodle/role:assign') and !is_enrolled($context, $user, 'moodle/role:assign')) {
+                    enrol_try_internal_enrol($course->id, $user->id, $config->courserole);
+                }
+                // Assign system role if necessary.
+                if (!empty($config->systemrole)) {
+                    $contextsystem = \context_system::instance();
+                    role_assign($config->systemrole, $user->id, $contextsystem->id);
                 }
 
                 // Delete request.
