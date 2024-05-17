@@ -107,14 +107,14 @@ if ($ADMIN->fulltree && $hassiteconfig) {
     $name = 'tool_courseautoapprove/courserole';
     $title = new lang_string('courserole', 'tool_courseautoapprove');
     $description = new lang_string('courserole_desc', 'tool_courseautoapprove');
-    $default = 0;
+    $default = 4; // Moodle's default non-editing teacher.
     $setting = new admin_setting_configselect($name, $title, $description, $default, $courserolechoice);
     $settings->add($setting);
     // Add SYSTEM role selector.
     $name = 'tool_courseautoapprove/systemrole';
     $title = new lang_string('systemrole', 'tool_courseautoapprove');
     $description = new lang_string('systemrole_desc', 'tool_courseautoapprove');
-    $default = 0;
+    $default = 0; // No system role by default.
     $setting = new admin_setting_configselect($name, $title, $description, $default, $systemrolechoise);
     $settings->add($setting);
 }
